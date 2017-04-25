@@ -27,12 +27,65 @@ function initMap() {
     zoom: 6
   });
 
+  navigator.geolocation.getCurrentPosition(function(position){
+    initPosition(position, map);
+    initMakers(map);
+  });
+
   directionsDisplay.setMap(map);
 
   var onChangeHandler = function() {
     calculateAndDisplayRoute(directionsService, directionsDisplay);
   };
   document.getElementById('Destination').addEventListener('change', onChangeHandler);
+}
+
+function initPosition(position, map) {
+  var pos = {
+    lat: position.coords.latitude,
+    lng: position.coords.longitude
+  };
+
+  var marker = new google.maps.Marker({
+    position: pos,
+    icon: 'https://developers.google.com/maps/documentation/javascript/examples/full/images/beachflag.png'
+  });
+
+  var contentString = "You are here!"
+
+  var infowindow = new google.maps.InfoWindow({
+    content: contentString
+  });
+
+  map.setCenter(pos);
+  map.setZoom(map.getZoom() + 4);
+  marker.setMap(map);
+
+  marker.addListener('click', function() {
+    infowindow.open(map, marker);
+  });
+}
+
+function initMakers(map) {
+  $.getJSON( "/data.json", function(data) {
+    $.each( data, function( key, val ) {
+      // console.log(key);
+      // console.log(val);
+      var marker = new google.maps.Marker({
+        position: {lat: val.latitude, lng: val.longitude}
+      });
+
+      var infowindow = new google.maps.InfoWindow({
+        content: val.address
+      });
+
+      marker.setMap(map);
+      marker.addListener('click', function() {
+        infowindow.open(map, marker);
+      });
+      
+    });
+  });
 }
 
 function calculateAndDisplayRoute(directionsService, directionsDisplay) {
@@ -51,7 +104,7 @@ function calcRoute(position, directionsService, directionsDisplay) {
   var destination = $('#Destination option:selected').text();
   // var destination = new google.maps.LatLng(10.849853, 106.768491);
 
-  console.log(current_pos)
+  // console.log(current_pos)
 
   var request = {
     origin: origin,
@@ -67,7 +120,6 @@ function calcRoute(position, directionsService, directionsDisplay) {
     }
   });
 }
-
 </script>
 
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA7QR58_WLm68QS97IiECGC81OgS4UN7Lo&callback=initMap"
